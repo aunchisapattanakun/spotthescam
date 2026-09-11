@@ -947,6 +947,128 @@
       100% { transform: scale(0); opacity: 0; }
     }
 
+    /* Confirmation Modal */
+    .confirm-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .confirm-modal-backdrop.show {
+      display: flex;
+    }
+
+    .confirm-modal-card {
+      background: #ffffff;
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 26px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+      animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .confirm-modal-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+    }
+
+    .confirm-modal-title {
+      font-family: var(--font-heading);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .confirm-modal-desc {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .confirm-choice-display {
+      background: #fafafa;
+      border: 1.5px solid #fecdd3;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--primary-dark);
+      margin-bottom: 20px;
+    }
+
+    .confirm-modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-modal-cancel {
+      flex: 1;
+      background: #fff;
+      border: 1.5px solid #e2e8f0;
+      color: #475569;
+      padding: 11px;
+      border-radius: 999px;
+      font-family: var(--font-heading);
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-modal-cancel:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    .btn-modal-confirm {
+      flex: 1.2;
+      background: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%);
+      border: none;
+      color: #fff;
+      padding: 11px;
+      border-radius: 999px;
+      font-family: var(--font-heading);
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: var(--shadow-btn);
+      transition: all 0.2s;
+    }
+
+    .btn-modal-confirm:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+
+    @keyframes scaleUp {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
     @media (max-width: 860px) {
       .welcome-hero {
         grid-template-columns: 1fr;
@@ -1081,8 +1203,8 @@
               <i class="fa-solid fa-shield-virus"></i> เฟสที่ 1: กำจัดมัลแวร์
             </div>
             <h3 class="panel-title">กำจัดมัลแวร์ในระบบ</h3>
-            <p class="panel-desc">
-              แตะที่ก้อนมัลแวร์สีแดงให้ครบ 3 ตัว เพื่อกู้คืนสัญญาณข้อความ
+            <p class="panel-desc" id="bugBriefingDesc">
+              แตะที่ก้อนมัลแวร์สีแดงให้ครบ เพื่อกู้คืนสัญญาณข้อความ
             </p>
 
             <div style="margin-top:16px; background:#fafafa; border:1px solid #f1f5f9; padding:14px; border-radius:12px;">
@@ -1227,6 +1349,29 @@
         </button>
       </div>
     </section>
+
+    <!-- Verdict Confirmation Modal -->
+    <div class="confirm-modal-backdrop" id="confirmModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+      <div class="confirm-modal-card">
+        <div class="confirm-modal-icon">
+          <i class="fa-solid fa-circle-question"></i>
+        </div>
+        <h3 class="confirm-modal-title" id="confirmModalTitle">ยืนยันคำตอบ</h3>
+        <p class="confirm-modal-desc">คุณต้องการส่งคำตอบนี้ใช่หรือไม่?</p>
+        
+        <div class="confirm-choice-display" id="confirmChoiceText">
+        </div>
+
+        <div class="confirm-modal-actions">
+          <button class="btn-modal-cancel" id="btnCancelChoice" type="button">
+            เลือกใหม่
+          </button>
+          <button class="btn-modal-confirm" id="btnConfirmChoice" type="button">
+            ยืนยันคำตอบ <i class="fa-solid fa-check"></i>
+          </button>
+        </div>
+      </div>
+    </div>
 
   </main>
 
@@ -1403,8 +1548,8 @@
       let answered = false;
       let soundEnabled = true;
 
-      // Simple Mini-game Bug Buster State
-      const totalBugs = 3;
+      // Simple Mini-game Bug Buster State (Randomized 3-5 bugs)
+      let currentTotalBugs = 3;
       let bugsPopped = 0;
 
       // DOM Elements
@@ -1417,6 +1562,7 @@
 
       // Mini-game Bug elements
       const miniGameBriefingPanel = document.getElementById('miniGameBriefingPanel');
+      const bugBriefingDesc = document.getElementById('bugBriefingDesc');
       const verdictControlPanel = document.getElementById('verdictControlPanel');
       const bugArenaCard = document.getElementById('bugArenaCard');
       const bugField = document.getElementById('bugField');
@@ -1495,35 +1641,45 @@
         scenarioDeviceCard.style.display = 'none';
         miniGameSuccessOverlay.classList.remove('show');
 
+        // Randomize 3 to 5 bugs each level
+        currentTotalBugs = Math.floor(Math.random() * 3) + 3;
         bugsPopped = 0;
-        bugScoreText.textContent = `กำจัดไวรัส: 0 / ${totalBugs} ตัว`;
+
+        if (bugBriefingDesc) {
+          bugBriefingDesc.textContent = `แตะที่ก้อนมัลแวร์สีแดงให้ครบ ${currentTotalBugs} ตัว เพื่อกู้คืนสัญญาณข้อความ`;
+        }
+
+        bugScoreText.textContent = `กำจัดไวรัส: 0 / ${currentTotalBugs} ตัว`;
         bugStatusText.textContent = `แตะที่ตัวไวรัสเพื่อทำลาย`;
-        bugCountBadge.textContent = `เหลือ ${totalBugs} ตัว`;
+        bugCountBadge.textContent = `เหลือ ${currentTotalBugs} ตัว`;
 
         spawnBugs();
       }
 
       function spawnBugs() {
-        // Clear existing bugs (keep success overlay)
         const oldBugs = bugField.querySelectorAll('.bug-target');
         oldBugs.forEach(b => b.remove());
 
-        // Bug positions (nicely spaced out in the arena)
-        const positions = [
-          { top: '25%', left: '25%' },
-          { top: '55%', left: '60%' },
-          { top: '35%', left: '72%' }
+        const candidatePositions = [
+          { top: '18%', left: '18%' },
+          { top: '22%', left: '68%' },
+          { top: '58%', left: '22%' },
+          { top: '62%', left: '70%' },
+          { top: '38%', left: '46%' }
         ];
 
-        const bugIcons = ['fa-virus', 'fa-bug', 'fa-triangle-exclamation'];
+        // Shuffle candidate positions
+        candidatePositions.sort(() => Math.random() - 0.5);
 
-        for (let i = 0; i < totalBugs; i++) {
+        const bugIcons = ['fa-virus', 'fa-bug', 'fa-triangle-exclamation', 'fa-skull-crossbones', 'fa-radiation'];
+
+        for (let i = 0; i < currentTotalBugs; i++) {
           const bug = document.createElement('div');
           bug.className = 'bug-target';
-          bug.style.top = positions[i].top;
-          bug.style.left = positions[i].left;
-          bug.style.animationDelay = `${i * 0.4}s`;
-          bug.innerHTML = `<i class="fa-solid ${bugIcons[i]}"></i>`;
+          bug.style.top = candidatePositions[i].top;
+          bug.style.left = candidatePositions[i].left;
+          bug.style.animationDelay = `${i * 0.3}s`;
+          bug.innerHTML = `<i class="fa-solid ${bugIcons[i % bugIcons.length]}"></i>`;
 
           bug.addEventListener('click', function() {
             if (this.classList.contains('popped')) return;
@@ -1531,11 +1687,11 @@
             bugsPopped++;
             playTone(880, 'sine', 0.15, 0.08);
 
-            bugScoreText.textContent = `กำจัดไวรัส: ${bugsPopped} / ${totalBugs} ตัว`;
-            const remaining = totalBugs - bugsPopped;
+            bugScoreText.textContent = `กำจัดไวรัส: ${bugsPopped} / ${currentTotalBugs} ตัว`;
+            const remaining = currentTotalBugs - bugsPopped;
             bugCountBadge.textContent = remaining > 0 ? `เหลือ ${remaining} ตัว` : 'สำเร็จ!';
 
-            if (bugsPopped >= totalBugs) {
+            if (bugsPopped >= currentTotalBugs) {
               setTimeout(miniGameComplete, 300);
             }
           });
@@ -1583,17 +1739,60 @@
           });
         });
 
-        // Answer buttons
+        // Answer buttons with Confirmation Popup
         optionsGrid.innerHTML = '';
         s.options.forEach((opt) => {
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.className = 'btn-choice';
           btn.innerHTML = `<span>${opt.text}</span> <i class="fa-solid fa-chevron-right" style="color:#cbd5e1; font-size:0.75rem;"></i>`;
-          btn.addEventListener('click', () => handleChoice(opt, btn, s));
+          btn.addEventListener('click', () => openConfirmModal(opt, btn, s));
           optionsGrid.appendChild(btn);
         });
       }
+
+      // Confirmation Modal State & Handlers
+      let pendingChoice = null;
+      const confirmModalBackdrop = document.getElementById('confirmModalBackdrop');
+      const confirmChoiceText = document.getElementById('confirmChoiceText');
+      const btnCancelChoice = document.getElementById('btnCancelChoice');
+      const btnConfirmChoice = document.getElementById('btnConfirmChoice');
+
+      function openConfirmModal(opt, btn, s) {
+        if (answered) return;
+        pendingChoice = { opt, btn, s };
+        confirmChoiceText.textContent = opt.text;
+        confirmModalBackdrop.classList.add('show');
+        playTone(600, 'sine', 0.1, 0.05);
+      }
+
+      function closeConfirmModal() {
+        confirmModalBackdrop.classList.remove('show');
+        pendingChoice = null;
+      }
+
+      btnCancelChoice.addEventListener('click', closeConfirmModal);
+
+      // Close modal on clicking backdrop outside
+      confirmModalBackdrop.addEventListener('click', function(e) {
+        if (e.target === confirmModalBackdrop) {
+          closeConfirmModal();
+        }
+      });
+
+      // Close modal on Escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && confirmModalBackdrop.classList.contains('show')) {
+          closeConfirmModal();
+        }
+      });
+
+      btnConfirmChoice.addEventListener('click', function() {
+        if (!pendingChoice) return;
+        const { opt, btn, s } = pendingChoice;
+        closeConfirmModal();
+        handleChoice(opt, btn, s);
+      });
 
       function handleChoice(selectedOption, clickedBtn, scenario) {
         if (answered) return;
